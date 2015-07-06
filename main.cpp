@@ -1,5 +1,5 @@
 #include <QtCore/QCoreApplication>
-#include "../include/mission_generator.h"
+#include "mission_generator.h"
 
 int main(int argc, char *argv[])
 {

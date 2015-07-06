@@ -8,6 +8,6 @@ CONFIG -= app_bundle
 TEMPLATE = app
 SOURCES += main.cpp \
     create_units.cpp \
-    ../include/mission_generator.cpp
+    mission_generator.cpp
 HEADERS += create_units.h \
-    ../include/mission_generator.h
+    mission_generator.h
