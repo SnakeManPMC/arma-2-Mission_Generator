@@ -6,18 +6,15 @@
 #include <QDebug>
 
 // constructor
-Mission_Generator::Mission_Generator(QString filename)
+Mission_Generator::Mission_Generator()
 {
-	Do_Mission(filename);
-	InitSQF(filename);
-	DescriptionExt(filename);
 }
 
 // write mission.sqm
 void Mission_Generator::Do_Mission(QString filename)
 {
 	QString currentSide, currentClass, currentRank;
-	QString sensorActivationBy, missionName, missionDescription, sensorActivationType;
+	QString sensorActivationBy, sensorActivationType;
 	QString sensorType, sensorAge, sensorText;
 	QString onActivation;
 	int amountSensors = 1, currentSensor = 0, sensorPosX = 123;
@@ -39,8 +36,9 @@ void Mission_Generator::Do_Mission(QString filename)
 	sensorActivationType.append("NOT PRESENT");
 	sensorType.append("END1");
 	sensorAge.append("UNKNOWN");
-	missionName.append("PMC mission generator made mission");
-	missionDescription.append("PMC mission generator made description");
+	// set mission name and description here IF they are not already set
+	if (missionName.size() == 0) setName("PMC mission generator mission");
+	if (missionDescription.size() == 0) setDescription("PMC mission generator description");
 	//waypointX = 0;
 	//waypointZ = 0;
 
@@ -261,7 +259,12 @@ void Mission_Generator::Do_Mission(QString filename)
 
 	// close mission.sqm file
 	file.close();
+
+	// not sure if its proper to add the init.sqf and description.ext creation here
+	InitSQF(filename);
+	DescriptionExt(filename);
 }
+
 
 void Mission_Generator::Header(QTextStream &stream, int randomSeed, float startWeather, float forecastWeather, int year, int month, int day, int hour, int minute)
 {
@@ -270,6 +273,7 @@ void Mission_Generator::Header(QTextStream &stream, int randomSeed, float startW
 	stream << ";\n\t\tyear=" << year << ";\n\t\tmonth=" << month;
 	stream << ";\n\t\tday=" << day << ";\n\t\thour=" << hour << ";\n" << "\t\tminute=" << minute << ";\n\t};\n";
 }
+
 
 // creates init.sqf file in mission dir
 void Mission_Generator::InitSQF(QString filename)
@@ -283,10 +287,12 @@ void Mission_Generator::InitSQF(QString filename)
 	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
 		// error
+		qDebug() << "There was error on" << missionsqm;
+		exit(1);
 	}
 	QTextStream stream(&file);
 
-	stream << "// if run on server\nif (isServer) then\n{\n\t//[] execVM ""PMC\\PMC_init.sqf"";\n}\nelse\n{\n\t// client stuff\n\t// set our weather using multiplayer parameter array\n";
+	stream << "/*\n\n\t" << missionName << "\n\n*/\n// if run on server\nif (isServer) then\n{\n\t//[] execVM ""PMC\\PMC_init.sqf"";\n}\nelse\n{\n\t// client stuff\n\t// set our weather using multiplayer parameter array\n";
 	stream << "\t//[] execVM \"PMC\\PMC_weather_with_mp_parameter.sqf\";\n\tplayer setVariable [\"BIS_noCoreConversations\", true];\n};\n";
 
 	file.close();
@@ -304,11 +310,26 @@ void Mission_Generator::DescriptionExt(QString filename)
 	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
 		// error
+		qDebug() << "There was error on" << missionsqm;
+		exit(1);
 	}
 	QTextStream stream(&file);
 
-	stream << "/*\n\n*/\n\nrespawn = GROUP;\nrespawndelay = 5;\nonLoadMission = \"PMC Campaign Mission\";\nOnLoadIntro = \"PMC Campaign Mission\";\nOnLoadIntroTime = true;\nOnLoadMissionTime = true;\n";
+	stream << "/*\n\n\t" << missionName << "\n\n*/\n\nrespawn = \"GROUP\";\nrespawndelay = 5;\nonLoadMission = ";
+	stream << "\"" << missionName << "\";\nOnLoadIntro = \"" << missionDescription << "\";\nOnLoadIntroTime = true;\nOnLoadMissionTime = true;\n";
 	stream << "ShowGPS = true;\n";
 
 	file.close();
+}
+
+
+void Mission_Generator::setName(QString name)
+{
+	missionName.append(name);
+}
+
+
+void Mission_Generator::setDescription(QString description)
+{
+	missionDescription.append(description);
 }
